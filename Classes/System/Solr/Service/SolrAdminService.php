@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace ApacheSolrForTypo3\Solr\System\Solr\Service;
 
+use ApacheSolrForTypo3\Solr\Exception;
 use ApacheSolrForTypo3\Solr\System\Configuration\TypoScriptConfiguration;
 use ApacheSolrForTypo3\Solr\System\Logging\SolrLogManager;
 use ApacheSolrForTypo3\Solr\System\Solr\Parser\SchemaParser;
@@ -176,9 +177,9 @@ class SolrAdminService extends AbstractSolrService
      * get field meta data for the index
      *
      * @param int $numberOfTerms Number of top terms to fetch for each field
-     * @return stdClass
+     * @return stdClass|null
      */
-    public function getFieldsMetaData(int $numberOfTerms = 0): stdClass
+    public function getFieldsMetaData(int $numberOfTerms = 0): ?stdClass
     {
         return $this->getLukeMetaData($numberOfTerms)->fields;
     }
@@ -188,6 +189,7 @@ class SolrAdminService extends AbstractSolrService
      *
      * @param int $numberOfTerms Number of top terms to fetch for each field
      * @return ResponseAdapter Index meta data
+     * @throws Exception
      */
     public function getLukeMetaData(int $numberOfTerms = 0): ResponseAdapter
     {
@@ -198,6 +200,11 @@ class SolrAdminService extends AbstractSolrService
             );
 
             $this->lukeData[$numberOfTerms] = $this->_sendRawGet($lukeUrl);
+            if($this->lukeData[$numberOfTerms]->getHttpStatus() !== 200){
+                throw new Exception(
+                    'Could not connect to Solr server.',
+                    1710341506);
+            }
         }
 
         return $this->lukeData[$numberOfTerms];
